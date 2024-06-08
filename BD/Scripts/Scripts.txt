@@ -1,0 +1,206 @@
+#--------------------------------------------------------------------------
+# Creación de esquema
+
+CREATE DATABASE `sgm` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
+
+#--------------------------------------------------------------------------
+# Creación Tabla Mantenimiento
+
+CREATE TABLE `mantenimiento` (
+  `ID` int NOT NULL,
+  `Nombre` varchar(45) NOT NULL,
+  `Descripcion` varchar(1000) NOT NULL,
+  `Estado` varchar(15) NOT NULL,
+  `FechaProgramado` date DEFAULT NULL,
+  PRIMARY KEY (`ID`));
+
+ALTER TABLE `sgm`.`mantenimiento` 
+ADD COLUMN `Prioridad` VARCHAR(10) NULL AFTER `FechaProgramado`;
+
+ALTER TABLE `sgm`.`mantenimiento` 
+ADD COLUMN `TipoMantenimiento` VARCHAR(20) NULL AFTER `Prioridad`;
+
+#--------------------------------------------------------------------------
+# Manipulación Tabla Mantenimiento
+
+insert into mantenimiento values (1, "Distribuidor Las Tunas", "Cambio de 8 postes de madera y 5 crucetas en derivación estancia Los Teros","Pendiente", null);
+insert into mantenimiento values (2, "Distribuidor Parque Industrial", "Cambiar aisladores en Subestación Transformadora Sector 4","Pendiente", null);
+insert into mantenimiento values (3, "Distribuidor Costanera", "Limpieza de línea y poda. Cambio aislador Baja Tensión", "Pendiente", null);
+
+select * from mantenimiento;
+
+
+update mantenimiento set FechaProgramado = date(now()) where id = 1;
+
+
+#--------------------------------------------------------------------------
+# Creación Tabla materiales
+
+CREATE TABLE `sgm`.`materiales` (
+  `IDMat` VARCHAR(10) NOT NULL,
+  `Descripcion` VARCHAR(45) NOT NULL,
+  `TipoMaterial` VARCHAR(45) NOT NULL,
+  PRIMARY KEY (`IDMat`));
+
+#--------------------------------------------------------------------------
+# Manipulación Tabla Mantenimiento
+
+insert into materiales values ("MS08", "Poste Madera 8 metros", "Baja Tensión");
+insert into materiales values ("MS11", "Poste Madera 11 metros", "Media Tensión");
+insert into materiales values ("HS08", "Columna Hormigón 8 metros", "Baja Tensión");
+insert into materiales values ("HS11", "Columna Hormigón 11 metros", "Media Tensión");
+insert into materiales values ("CRM", "Cruceta de Madera", "Media Tensión");
+insert into materiales values ("CRH", "Cruceta de Hormigón", "Media Tensión");
+insert into materiales values ("CRB", "Cruceta de Madera Baja Tensión", "Baja Tensión");
+insert into materiales values ("A13", "Aislador 13 kV", "Media Tensión");
+insert into materiales values ("A33", "Aislador 33 kV", "Media Tensión");
+insert into materiales values ("ABT", "Aislador Baja Tensión", "Baja Tensión");
+
+select * from materiales;
+
+#--------------------------------------------------------------------------
+# Creación Tabla materiales_mantenimieto
+
+CREATE TABLE `sgm`.`materiales_mantenimiento` (
+  `ID` INT NOT NULL,
+  `ID_Mto` INT NOT NULL,
+  `ID_Mat` VARCHAR(10) NOT NULL,
+  PRIMARY KEY (`ID`),
+  INDEX `ID_Mto_idx` (`ID_Mto` ASC) VISIBLE,
+  INDEX `ID_Mat_idx` (`ID_Mat` ASC) VISIBLE,
+  CONSTRAINT `ID_Mto`
+    FOREIGN KEY (`ID_Mto`)
+    REFERENCES `sgm`.`mantenimiento` (`ID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `ID_Mat`
+    FOREIGN KEY (`ID_Mat`)
+    REFERENCES `sgm`.`materiales` (`IDMat`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION);
+
+ALTER TABLE `sgm`.`materiales_mantenimiento` 
+CHANGE COLUMN `ID` `ID` INT NOT NULL AUTO_INCREMENT ;
+
+#--------------------------------------------------------------------------
+# Manipulación Tabla Materiales_Mantenimiento
+
+insert into materiales_mantenimiento (ID_Mto, ID_Mat)  values ( 1, "MS08");
+insert into materiales_mantenimiento (ID_Mto, ID_Mat)  values ( 1, "MS08");
+insert into materiales_mantenimiento (ID_Mto, ID_Mat)  values ( 1, "CRM");
+insert into materiales_mantenimiento (ID_Mto, ID_Mat)  values ( 1, "CRM");
+insert into materiales_mantenimiento (ID_Mto, ID_Mat)  values ( 2, "A13");
+insert into materiales_mantenimiento (ID_Mto, ID_Mat)  values ( 2, "A13");
+insert into materiales_mantenimiento (ID_Mto, ID_Mat)  values ( 2, "A13");
+insert into materiales_mantenimiento (ID_Mto, ID_Mat)  values ( 3, "ABT");
+
+select * from materiales_mantenimiento;
+
+#--------------------------------------------------------------------------
+# Creación Tabla operarios
+
+CREATE TABLE `sgm`.`operarios` (
+  `ID_Op` INT NOT NULL,
+  `Nombre` VARCHAR(45) NOT NULL,
+  `Cargo` VARCHAR(45) NOT NULL,
+  PRIMARY KEY (`ID_Op`));
+
+
+#--------------------------------------------------------------------------
+# Manipulación Tabla Operarios
+
+insert into operarios values (28676538, "Rettore Ricardo", "Encargado");
+insert into operarios values (26589145, "López José", "Encargado");
+insert into operarios values (36569458, "Landra Pablo","Oficial");
+insert into operarios values (40256895, "Ríos Héctor", "Oficial");
+insert into operarios values (42571023, "Hunz Leandro", "Ayudante");
+insert into operarios values (46125784, "Vega Ignacio", "Ayudante");
+
+select * from operarios;
+
+#--------------------------------------------------------------------------
+# Creación Tabla Cuadrillas
+
+CREATE TABLE `sgm`.`cuadrillas` (
+  `ID_Cuad` INT NOT NULL,
+  `Descripción` VARCHAR(45) NOT NULL,
+  PRIMARY KEY (`ID_Cuad`));
+
+ALTER TABLE `sgm`.`cuadrillas` 
+CHANGE COLUMN `ID_Cuad` `ID_Cuad` VARCHAR(10) NOT NULL ;
+
+
+#--------------------------------------------------------------------------
+# Manipulación Tabla Cuadrillas
+
+insert into cuadrillas values ( "CH01", "Cuadrilla con Hidro H100");
+insert into cuadrillas values ( "CP01", "Cuadrilla poda con Hidro H10");
+
+select * from cuadrillas;
+
+
+#--------------------------------------------------------------------------
+# Creación Tabla Operarios_Cuadrillas
+
+CREATE TABLE `sgm`.`operarios_cuadrillas` (
+  `ID` INT NOT NULL AUTO_INCREMENT,
+  `ID_Cuad` VARCHAR(10) NULL,
+  `ID_Op` INT NULL,
+  PRIMARY KEY (`ID`),
+  INDEX `ID_Cuad_idx` (`ID_Cuad` ASC) VISIBLE,
+  INDEX `ID_Op_idx` (`ID_Op` ASC) VISIBLE,
+  CONSTRAINT `ID_Cuad`
+    FOREIGN KEY (`ID_Cuad`)
+    REFERENCES `sgm`.`cuadrillas` (`ID_Cuad`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `ID_Op`
+    FOREIGN KEY (`ID_Op`)
+    REFERENCES `sgm`.`operarios` (`ID_Op`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION);
+
+
+#--------------------------------------------------------------------------
+# Manipulación Tabla Operarios_Cuadrillas
+
+insert into operarios_cuadrillas (ID_Cuad, ID_Op)  values ( "CH01", 28676538);
+insert into operarios_cuadrillas (ID_Cuad, ID_Op)  values ( "CH01", 36569458);
+insert into operarios_cuadrillas (ID_Cuad, ID_Op)  values ( "CH01", 42571023);
+insert into operarios_cuadrillas (ID_Cuad, ID_Op)  values ( "CP01", 26589145);
+insert into operarios_cuadrillas (ID_Cuad, ID_Op)  values ( "CP01", 40256895);
+insert into operarios_cuadrillas (ID_Cuad, ID_Op)  values ( "CP01", 46125784);
+
+
+select * from operarios_cuadrillas;
+
+#--------------------------------------------------------------------------
+# Creación Tabla Mantenimiento_Cuadrillas
+
+CREATE TABLE `sgm`.`mantenimiento_cuadrillas` (
+  `ID` INT NOT NULL AUTO_INCREMENT,
+  `ID_Mant` INT NOT NULL,
+  `ID_Cuad` VARCHAR(10) NOT NULL,
+  PRIMARY KEY (`ID`),
+  INDEX `ID_Mant_idx` (`ID_Mant` ASC) VISIBLE,
+  INDEX `ID_Cuad_idx` (`ID_Cuad` ASC) VISIBLE,
+  CONSTRAINT `ID_Mant`
+    FOREIGN KEY (`ID_Mant`)
+    REFERENCES `sgm`.`mantenimiento` (`ID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `ID_Cua`
+    FOREIGN KEY (`ID_Cuad`)
+    REFERENCES `sgm`.`cuadrillas` (`ID_Cuad`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION);
+
+
+#--------------------------------------------------------------------------
+# Manipulación Tabla Mantenimiento_Cuadrillas
+
+insert into mantenimiento_cuadrillas (ID_Mant, ID_Cuad)  values (1, "CH01");
+insert into mantenimiento_cuadrillas (ID_Mant, ID_Cuad)  values (2, "CH01");
+
+select * from mantenimiento_cuadrillas;
+

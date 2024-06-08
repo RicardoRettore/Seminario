@@ -31,6 +31,8 @@ CREATE TABLE `sgm`.`materiales` (
   `Descripcion` VARCHAR(45) NOT NULL,
   `TipoMaterial` VARCHAR(45) NOT NULL,
   PRIMARY KEY (`IDMat`));
+ALTER TABLE `sgm`.`materiales` 
+ADD COLUMN `Cantidad` INT NOT NULL AFTER `TipoMaterial`;
 
 
 #--------------------------------------------------------------------------
@@ -57,6 +59,10 @@ CREATE TABLE `sgm`.`materiales_mantenimiento` (
 ALTER TABLE `sgm`.`materiales_mantenimiento` 
 CHANGE COLUMN `ID` `ID` INT NOT NULL AUTO_INCREMENT ;
 
+ALTER TABLE `sgm`.`materiales_mantenimiento` 
+ADD COLUMN `Cantidad` INT NULL AFTER `ID_Mat`;
+
+
 
 #--------------------------------------------------------------------------
 # Creación Tabla operarios
@@ -72,13 +78,13 @@ CREATE TABLE `sgm`.`operarios` (
 #--------------------------------------------------------------------------
 # Creación Tabla Cuadrillas
 
-CREATE TABLE `sgm`.`cuadrillas` (
-  `ID_Cuad` INT NOT NULL,
-  `Descripción` VARCHAR(45) NOT NULL,
-  PRIMARY KEY (`ID_Cuad`));
+CREATE TABLE `cuadrillas` (
+  `ID_Cuad` varchar(10) NOT NULL,
+  `Descripción` varchar(45) NOT NULL,
+  `Responsable` varchar(45) NOT NULL,
+  PRIMARY KEY (`ID_Cuad`)
+) ;
 
-ALTER TABLE `sgm`.`cuadrillas` 
-CHANGE COLUMN `ID_Cuad` `ID_Cuad` VARCHAR(10) NOT NULL ;
 
 #--------------------------------------------------------------------------
 # Creación Tabla Operarios_Cuadrillas
