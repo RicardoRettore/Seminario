@@ -73,27 +73,34 @@ public class MenuMaterialesMto {
     // ...
     System.out.println("Materiales existentes:\n");
     System.out.println("------------------------");
-    System.out.println(gestor.listarStockMateriales());
-    System.out.println("------------------------\n");
-
-    System.out.println("Ingrese el ID del material a agregar:");
-    String id = new Scanner(System.in).nextLine();
-    System.out.println("Ingrese la cantidad a agregar:");
-    String cantidad = new Scanner(System.in).nextLine();
-
-
-    msg = gestor.agregarMaterialMto(id,cantidad);
-    if (msg.getResultado()){
-      System.out.println("SIIII -> " + msg.getMensaje());
-    } else {
-      System.out.println("NOOOO -> " + msg.getMensaje());
-    }
-    //System.out.println("Mantenimiento agregado exitosamente.");
-
-    System.out.println("\n----------------------------");
-    System.out.println("Materiales del Mantenimiento\n");
-    System.out.println(gestor.listarMateriales());
+    msg = gestor.cargarMaterialesStock();
     
+    if (msg.getResultado()){
+        System.out.println(gestor.listarStockMateriales());
+        System.out.println("------------------------\n");
+
+        System.out.println("Ingrese el ID del material a agregar:");
+        String id = new Scanner(System.in).nextLine();
+        System.out.println("Ingrese la cantidad a agregar:");
+        String cantidad = new Scanner(System.in).nextLine();
+
+
+        msg = gestor.agregarMaterialMto(id,cantidad);
+        if (msg.getResultado()){
+          System.out.println("SIIII -> " + msg.getMensaje());
+        } else {
+          System.out.println("NOOOO -> " + msg.getMensaje());
+        }
+        //System.out.println("Mantenimiento agregado exitosamente.");
+
+        System.out.println("\n----------------------------");
+        System.out.println("Materiales del Mantenimiento\n");
+        System.out.println(gestor.listarMateriales());
+    }
+    else {
+        System.out.println(msg.getMensaje());
+    }
+   
   }
 
   private void eliminarMaterial(){

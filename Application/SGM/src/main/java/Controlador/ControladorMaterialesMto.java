@@ -7,6 +7,8 @@ package Controlador;
 import java.util.ArrayList;
 import Modelo.Material;
 import Modelo.Mensaje;
+import ConexionBD.ModeloRegistradorMateriales;
+import java.sql.SQLException;
 /**
  *
  * @author Ricardo Rettore <Ricardo.Rettore at seminario.org>
@@ -25,7 +27,6 @@ public class ControladorMaterialesMto {
     public ControladorMaterialesMto(ArrayList<Material> materiales) {
         this.materiales = materiales;
         stockMateriales = new ArrayList<>();
-        inicializarMaterialesStock();    
     }
 
     /**
@@ -36,6 +37,10 @@ public class ControladorMaterialesMto {
      */
     public Mensaje agregarMaterialMto(String idMat, String cantidad) {
         Mensaje msg = new Mensaje();
+        
+        // objeto para ooncetar a BD
+        ModeloRegistradorMateriales bd = new ModeloRegistradorMateriales();
+        
         try {
             // Validar que la cantidad se un número entero positivo
             Integer.valueOf(cantidad);
@@ -49,19 +54,25 @@ public class ControladorMaterialesMto {
                     Material materialMto = buscarMateiralMto(idMat);
                     // Validar si el material ya está en la lista de materiales del mantenimiento
                     if (materialMto != null){
-                            // Sumar la cantidad de material al mantenimiento
-                            materialMto.setCantidad(materialMto.getCantidad() + Integer.parseInt(cantidad));
                             // Actualizar el stock del material
                             material.setCantidad(material.getCantidad() - Integer.parseInt(cantidad));
-                            msg.SetMensaje(true,"Material agregado exitosamente.");
+                            msg = bd.ActualizarMaterialStock(material);
+                            if (msg.getResultado()){ 
+                                // Sumar la cantidad de material al mantenimiento
+                                materialMto.setCantidad(materialMto.getCantidad() + Integer.parseInt(cantidad));
+                                msg.SetMensaje(true,"Material agregado exitosamente.");
+                            }  
                     }
                     else {
                         // Agregar el material al mantenimiento
                         materialMto = new Material(idMat, material.getDescripcion(), material.getTipo(), material.getUnidad(), Integer.parseInt(cantidad));
-                        materiales.add(materialMto);
                         // Actualizar el stock del material
                         material.setCantidad(material.getCantidad() - Integer.parseInt(cantidad));
-                        msg.SetMensaje(true,"Material agregado exitosamente.");
+                        msg = bd.ActualizarMaterialStock(material);
+                        if (msg.getResultado()){
+                            materiales.add(materialMto);
+                            msg.SetMensaje(true,"Material agregado exitosamente.");
+                        }
                     }
                 } else {
                     // setear mensaje por falta de stock del material
@@ -92,6 +103,10 @@ public class ControladorMaterialesMto {
      */
     public Mensaje eliminarMaterialMto(String idMat, String cantidad) {
          Mensaje msg = new Mensaje();
+                 
+        // objeto para ooncetar a BD
+        ModeloRegistradorMateriales bd = new ModeloRegistradorMateriales();
+        
         try {
             // Validar que la cantidad se un número entero positivo
             Integer.valueOf(cantidad);
@@ -101,19 +116,25 @@ public class ControladorMaterialesMto {
             if (materialMto != null){
                 // Validar que la cantidad a eliminar sea menor que la cantidad en mantenimiento    
                 if (Integer.parseInt(cantidad)<materialMto.getCantidad()){
-                    // Actualizar la cantidad de material en el mantenimiento
-                    materialMto.setCantidad(materialMto.getCantidad() - Integer.parseInt(cantidad));
                     // Actualizar el stock del material
                     Material material = buscarMaterialStock(idMat);
                     material.setCantidad(material.getCantidad()+Integer.parseInt(cantidad));
-                    msg.SetMensaje(true,"Material eliminado exitosamente.");
+                    msg = bd.ActualizarMaterialStock(material);
+                    if (msg.getResultado()){
+                        // Actualizar la cantidad de material en el mantenimiento
+                        materialMto.setCantidad(materialMto.getCantidad() - Integer.parseInt(cantidad));
+                        msg.SetMensaje(true,"Material eliminado exitosamente.");
+                    }
                 } else {
-                    // Eliminar el material de la lista de mantenimiento
-                    materiales.remove(materialMto);
                     // Actualizar el stock del material
                     Material material = buscarMaterialStock(idMat);
                     material.setCantidad(material.getCantidad() + Integer.parseInt(cantidad));
-                    msg.SetMensaje(true,"Material eliminado exitosamente.");
+                    msg = bd.ActualizarMaterialStock(material);
+                    if (msg.getResultado()){
+                        // Eliminar el material de la lista de mantenimiento
+                        materiales.remove(materialMto);
+                        msg.SetMensaje(true,"Material eliminado exitosamente.");
+                    }
                    }
                 }
             else {
@@ -186,16 +207,21 @@ public class ControladorMaterialesMto {
     }
     
     /**
-     * Método para inicializar el stock de materiales.
+     * Método para actualizar el stock de materiales.
      */
-    private void inicializarMaterialesStock(){
-        stockMateriales.add(new Material("MS08", "Poste Madera 8 Metros", "Estructura", "Unidad", 50));
-        stockMateriales.add(new Material("MS11", "Poste Madera 11 Metros", "Estructura", "Unidad", 50));
-        stockMateriales.add(new Material("HS10", "Columna Hormigón 10 Metros", "Estructura", "Unidad", 50));
-        stockMateriales.add(new Material("HS13", "Columna Hormigón 13 Metros", "Estructura", "Unidad", 50));
-        stockMateriales.add(new Material("AI13", "Aislador 13,2 kV", "Aislador", "Unidad", 50));
-        stockMateriales.add(new Material("AI33", "Aislador 33 kV", "Aislador", "Unidad", 50));
-        stockMateriales.add(new Material("P095", "Cable preensamblado 95/50 Al/Al", "Cable", "Metros", 50));
-        stockMateriales.add(new Material("P120", "Cable preensamblado 120/50 Al/Al", "Cable", "Metros", 50));
+    public Mensaje cargarMaterialesStock(){
+        Mensaje msg = new Mensaje();
+        // objeto para ooncetar a BD
+        ModeloRegistradorMateriales bd = new ModeloRegistradorMateriales();
+        try {
+            stockMateriales = bd.ConsultarMateriales();
+            msg.SetMensaje(true, "Stock cargado.");
+        }
+        catch (SQLException e) {
+            msg.SetMensaje(false, "Error al cargar stock de materiales. " + e.getMessage());
+        }
+        
+        return msg;
+        
     }   
 }

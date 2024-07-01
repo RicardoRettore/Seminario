@@ -34,6 +34,11 @@ CREATE TABLE `sgm`.`materiales` (
 ALTER TABLE `sgm`.`materiales` 
 ADD COLUMN `Cantidad` INT NOT NULL AFTER `TipoMaterial`;
 
+ALTER TABLE `sgm`.`materiales` 
+ADD COLUMN `Unidad` VARCHAR(45) NOT NULL AFTER `Cantidad`;
+
+ALTER TABLE `sgm`.`materiales` 
+CHANGE COLUMN `Unidad` `Unidad` VARCHAR(45) NOT NULL AFTER `TipoMaterial`;
 
 #--------------------------------------------------------------------------
 # Creación Tabla materiales_mantenimieto
@@ -43,8 +48,8 @@ CREATE TABLE `sgm`.`materiales_mantenimiento` (
   `ID_Mto` INT NOT NULL,
   `ID_Mat` VARCHAR(10) NOT NULL,
   PRIMARY KEY (`ID`),
-  INDEX `ID_Mto_idx` (`ID_Mto` ASC) VISIBLE,
-  INDEX `ID_Mat_idx` (`ID_Mat` ASC) VISIBLE,
+  INDEX `ID_Mto_idx` (`ID_Mto` ASC) ,
+  INDEX `ID_Mat_idx` (`ID_Mat` ASC) ,
   CONSTRAINT `ID_Mto`
     FOREIGN KEY (`ID_Mto`)
     REFERENCES `sgm`.`mantenimiento` (`ID`)
@@ -85,6 +90,8 @@ CREATE TABLE `cuadrillas` (
   PRIMARY KEY (`ID_Cuad`)
 ) ;
 
+ALTER TABLE `sgm`.`cuadrillas` 
+CHANGE COLUMN `Descripción` `Descripcion` VARCHAR(45) NOT NULL ;
 
 #--------------------------------------------------------------------------
 # Creación Tabla Operarios_Cuadrillas
@@ -94,8 +101,8 @@ CREATE TABLE `sgm`.`operarios_cuadrillas` (
   `ID_Cuad` VARCHAR(10) NULL,
   `ID_Op` INT NULL,
   PRIMARY KEY (`ID`),
-  INDEX `ID_Cuad_idx` (`ID_Cuad` ASC) VISIBLE,
-  INDEX `ID_Op_idx` (`ID_Op` ASC) VISIBLE,
+  INDEX `ID_Cuad_idx` (`ID_Cuad` ASC) ,
+  INDEX `ID_Op_idx` (`ID_Op` ASC) ,
   CONSTRAINT `ID_Cuad`
     FOREIGN KEY (`ID_Cuad`)
     REFERENCES `sgm`.`cuadrillas` (`ID_Cuad`)
@@ -116,8 +123,8 @@ CREATE TABLE `sgm`.`mantenimiento_cuadrillas` (
   `ID_Mant` INT NOT NULL,
   `ID_Cuad` VARCHAR(10) NOT NULL,
   PRIMARY KEY (`ID`),
-  INDEX `ID_Mant_idx` (`ID_Mant` ASC) VISIBLE,
-  INDEX `ID_Cuad_idx` (`ID_Cuad` ASC) VISIBLE,
+  INDEX `ID_Mant_idx` (`ID_Mant` ASC) ,
+  INDEX `ID_Cuad_idx` (`ID_Cuad` ASC) ,
   CONSTRAINT `ID_Mant`
     FOREIGN KEY (`ID_Mant`)
     REFERENCES `sgm`.`mantenimiento` (`ID`)

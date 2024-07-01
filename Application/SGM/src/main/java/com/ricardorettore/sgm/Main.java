@@ -6,6 +6,7 @@ package com.ricardorettore.sgm;
 
 import Vista.MenuPrincipalSGM;
 
+
 /**
  *
  * @author Ricardo Rettore <Ricardo.Rettore at seminario.org>

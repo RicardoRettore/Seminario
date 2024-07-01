@@ -12,6 +12,8 @@ package Controlador;
 import java.util.ArrayList;
 import Modelo.Cuadrilla;
 import Modelo.Mensaje;
+import java.sql.SQLException;
+import ConexionBD.ModeloRegistradorCuadrillas;
 
 public class ControladorCuadrillasMto {
 
@@ -28,7 +30,6 @@ public class ControladorCuadrillasMto {
         cuadrillasDisponibles = new ArrayList<>();
         this.cuadrillasMto = cuadrillasMto;
 
-        cargarCuadrillasExistentes();
     }
 
 
@@ -133,11 +134,17 @@ public class ControladorCuadrillasMto {
      * Método para listar las cuadrillas existentes en la lista de cuadrillas disponibles
      * @retrun String Una cadena con la lista.
      */
-    public String listarCuadrillasDisponibles(){
+    public String listarCuadrillasDisponibles() throws SQLException {
         String listaCuadrillas = "";
-        for (Cuadrilla cuadrilla : cuadrillasDisponibles) {
-            listaCuadrillas += cuadrilla.getIdCuad() + " - " + cuadrilla.getDescripcion() + "\n";
-        }
+        try {
+            cargarCuadrillasExistentes();
+            for (Cuadrilla cuadrilla : cuadrillasDisponibles) {
+                listaCuadrillas += cuadrilla.getIdCuad() + " - " + cuadrilla.getDescripcion() + "\n";
+                }
+            }
+         finally {
+                 
+                 }
         return listaCuadrillas;
     }
 
@@ -158,8 +165,15 @@ public class ControladorCuadrillasMto {
      * Método para inicializar las cuadrillas disponibles
      * @retrun void
      */
-    private void cargarCuadrillasExistentes(){
-        cuadrillasDisponibles.add(new Cuadrilla("CH100", "Cuadrilla con Hidro 100.", "Restano Pedro"));
-        cuadrillasDisponibles.add(new Cuadrilla("CMT01", "Cuadrilla de Media Tensión.", "Albornoz Adolfo"));
+    private void cargarCuadrillasExistentes() throws SQLException {
+        // objeto para ooncetar a BD
+        ModeloRegistradorCuadrillas bd = new ModeloRegistradorCuadrillas();
+        try {
+            cuadrillasDisponibles = bd.ConsultarCuadrillas();
+        }
+        finally {
+            
+        }
+
     }    
 }

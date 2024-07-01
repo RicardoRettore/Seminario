@@ -12,6 +12,8 @@ import Modelo.Mantenimiento;
 import Modelo.Mensaje;
 import Vista.MenuMaterialesMto;
 import Vista.MenuCuadrillaMto;
+import ConexionBD.ModeloRegistradorMantenimiento;
+import java.sql.SQLException;
 
 
 
@@ -21,17 +23,21 @@ import Vista.MenuCuadrillaMto;
  */
 public class ControladorMantenimiento {
     private ArrayList<Mantenimiento> mantenimientos;
-    private String empresa;
+
     
 
-    public ControladorMantenimiento(String empresa) {
-        this.empresa = empresa;
-        this.mantenimientos = new ArrayList<>();
+    public ControladorMantenimiento() {
+        // objeto para traer datos de BD
+        ModeloRegistradorMantenimiento bd = new ModeloRegistradorMantenimiento();
+        // actualizo la lista de mantenimientos desde la BD
+        try {
+            this.mantenimientos = bd.ConsultarMantenimientos();
+        }
+        catch (SQLException e) {
+                
+                }
     }
 
-    public String getEmpresa() {
-        return this.empresa;
-    }
 
     
     /**
@@ -44,8 +50,10 @@ public class ControladorMantenimiento {
      * @param prioridad  La prioridad del mantenimiento.
      * @return Un mensaje de éxito o error.
      */
-    public Mensaje agregarMantenimiento(String cod, String nombre, String descripcion, String tipo, String prioridad) {
+    public Mensaje agregarMantenimiento(String cod, String nombre, String descripcion, String tipo, String prioridad) throws SQLException {
         Mensaje msg = new Mensaje();
+        // objeto para traer datos de BD
+        ModeloRegistradorMantenimiento bd = new ModeloRegistradorMantenimiento();
         try {
             // Validar que el código del mantenimiento sea un número entero positivo
             Integer.valueOf(cod);
@@ -54,11 +62,21 @@ public class ControladorMantenimiento {
                 // Valida que el manteimientos no exista previamente
                 if (!mantenimientos.contains(new Mantenimiento(Integer.parseInt(cod), nombre, descripcion, tipo, prioridad))) {
                     // Agrega el mantenimiento a la lista
-                    mantenimientos.add(new Mantenimiento(Integer.parseInt(cod), nombre, descripcion, tipo, prioridad));
-                    msg.SetMensaje(true, "Mantenimiento agregado exitosamente.");
+                    Mantenimiento mto = new Mantenimiento(Integer.parseInt(cod), nombre, descripcion, tipo, prioridad);
                     // Invoca a la interfaz para agregar materiales
-                    MenuMaterialesMto menu = new MenuMaterialesMto(mantenimientos.get(mantenimientos.size()-1));
+                    MenuMaterialesMto menu = new MenuMaterialesMto(mto);
                     menu.ejecutarMenu();
+                    // grabar información en la BD
+                    try {
+                        msg = bd.IngresarMantenimiento(mto);
+                        if (msg.getResultado()) {
+                            mantenimientos.add(mto);
+                            msg.SetMensaje(true, "Mantenimiento agregado exitosamente.");
+                        }
+                    }
+                    catch (SQLException e) {
+                        msg.SetMensaje(false, "No fue posible ingresar el mantenimiento. " + e.getMessage());
+                    }
                 } else {
                     // Captura excepción si el mantenimiento ya existe
                     throw new IllegalArgumentException("Error: Ya existe un mantenimiento con este código.");
@@ -89,6 +107,10 @@ public class ControladorMantenimiento {
      */
     public Mensaje programarMantenimiento(String idMto, String fecha, String horas) {
         Mensaje msg = new Mensaje();
+        
+        // objeto para traer datos de BD
+        ModeloRegistradorMantenimiento bd = new ModeloRegistradorMantenimiento();
+        
         try {
             // Valida que el código del mantenimiento sea un número entero positivo
             Integer.valueOf(idMto);
@@ -113,7 +135,14 @@ public class ControladorMantenimiento {
                     if (!mto.getCuadrillas().isEmpty()){
                         // Actualiza el estado del mantenimiento a "Programado" 
                         mto.setEstado("Programado");
-                        msg.SetMensaje(true, "Mantenimiento programado exitosamente.");
+                        // Intento Actualizar la Base de Datos
+                        msg = bd.ProgramarMantenimiento(mto);
+                        if (!msg.getResultado()){
+                            // Si no se actualizó la BD elimino las actualizaciones en el objeto
+                            mto.setEstado("Pendiente");
+                            mto.setFechaProgramado(null);
+                            mto.setHorasTraslado(0);
+                        }
                     } else {
                         // Elimina actualización por no contar con cuadrilla agregada
                         mto.setFechaProgramado(null);
@@ -152,6 +181,10 @@ public class ControladorMantenimiento {
      */
     public Mensaje finalizarMantenimiento(String idMto, String estadoFinal) {
         Mensaje msg = new Mensaje();
+        
+        // objeto para traer datos de BD
+        ModeloRegistradorMantenimiento bd = new ModeloRegistradorMantenimiento();
+        
         try {
             // Valida que el código del mantenimiento sea un número entero positivo
             Integer.valueOf(idMto);
@@ -166,7 +199,7 @@ public class ControladorMantenimiento {
                         if (estadoFinal.equals("Realizado")) {
                             // Actualiza el estado del mantenimiento a "Realizado"
                             mto.setEstado(estadoFinal);
-                            msg.SetMensaje(true, "El Mantenimiento ha sido actualizado.");
+                            msg = bd.FinalizarMantenimiento(mto);
                         } else {
                             // Elimina fecha programado y horas de traslado a los mantenimientos que sean reprogramados
                             mto.setFechaProgramado(null);
@@ -174,7 +207,7 @@ public class ControladorMantenimiento {
                             mto.setEstado(estadoFinal);
                             // Elimina las cuadrillas asignadas al mantenimiento
                             mto.getCuadrillas().clear();
-                            msg.SetMensaje(true, "El Mantenimiento ha sido actualizado.");
+                            msg = bd.ReprogramarMantenimiento(mto);
                         }
                     } else {
                         // Setea mensaje de error si el estado del mantenimiento no es válido para finalizar
@@ -198,7 +231,14 @@ public class ControladorMantenimiento {
             // Captura cualquier otro error
             msg.SetMensaje(false, "Error: No se pudo programar el mantenimiento.");
         }
-
+        
+        // actualizo la lista de mantenimientos desde la BD
+         try {
+            this.mantenimientos = bd.ConsultarMantenimientos();
+        }
+        catch (SQLException e) {
+                
+                }
         return msg;
     }
 
@@ -206,8 +246,20 @@ public class ControladorMantenimiento {
      * Retorna la lista de mantenimientos.
      * @return Un ArrayList strings con el resumen de cada mantenimientos.
      */
-    public ArrayList<String> getMantenimientosToString() {
+    public ArrayList<String> getMantenimientosToString() throws SQLException {
+        // objeto para traer datos de BD
+        ModeloRegistradorMantenimiento bd = new ModeloRegistradorMantenimiento();
+        
         ArrayList<String> listaMantenimientos = new ArrayList<>();
+        
+        // solicito al modelo Registrador que busque los mantenimientos en la BD
+        try {
+            this.mantenimientos = bd.ConsultarMantenimientos();
+        } 
+        finally {
+        
+        }
+        
         for (Mantenimiento mantenimiento : mantenimientos) {
             listaMantenimientos.add(mantenimiento.toString());
         }
@@ -219,7 +271,19 @@ public class ControladorMantenimiento {
      * @param cod El código del mantenimiento.
      * @return Un smtring con la lista de mantenimientos.
      */
-    public String detallarMantenimiento(String cod){
+    public String detallarMantenimiento(String cod) throws SQLException {
+        // objeto para traer datos de BD
+        ModeloRegistradorMantenimiento bd = new ModeloRegistradorMantenimiento();
+        
+        // Antes de detallar un mantenimiento actualizo la lista de los mismos
+        // con la información de la BD
+         try {
+            this.mantenimientos = bd.ConsultarMantenimientos();
+        }
+        finally {
+
+                }
+         
         Mantenimiento mto = null;
         try {
             for (Mantenimiento mantenimiento : mantenimientos) {

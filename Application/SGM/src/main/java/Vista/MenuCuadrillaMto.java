@@ -8,6 +8,7 @@ import java.util.Scanner;
 import Modelo.Mantenimiento;
 import Modelo.Mensaje;
 import Controlador.ControladorCuadrillasMto;
+import java.sql.SQLException;
 /**
  *
  * @author Ricardo Rettore <Ricardo.Rettore at seminario.org>
@@ -27,8 +28,13 @@ public class MenuCuadrillaMto {
         int opcion;
         do {
             mostrarMenu();
-            opcion = Integer.parseInt(new Scanner(System.in).nextLine());
-
+           
+            try{
+                opcion = Integer.parseInt(new Scanner(System.in).nextLine());
+            } catch (Exception e) {
+                opcion = -1;
+            }
+            
             switch (opcion) {
                 case 1:
                     agregarCuadrilla();
@@ -63,15 +69,20 @@ public class MenuCuadrillaMto {
         System.out.println("Agregar cuadrilla");
         System.out.println("Cuadrillas existentes:\n");
         System.out.println("------------------------");
-        System.out.println(gestor.listarCuadrillasDisponibles());
-        System.out.println("------------------------\n");
-        System.out.print("Ingrese el ID de la cuadrilla: ");
-        String idCuad = new Scanner(System.in).nextLine();
-        Mensaje msg = gestor.agregarCuadrillaMto(idCuad);
-        if (msg.getResultado()){
-            System.out.println("SIIII -> " + msg.getMensaje());
-        } else {
-            System.out.println("NOOOO -> " + msg.getMensaje());
+        try {
+            System.out.println(gestor.listarCuadrillasDisponibles());
+            System.out.println("------------------------\n");
+            System.out.print("Ingrese el ID de la cuadrilla: ");
+            String idCuad = new Scanner(System.in).nextLine();
+            Mensaje msg = gestor.agregarCuadrillaMto(idCuad);
+            if (msg.getResultado()){
+                System.out.println("SIIII -> " + msg.getMensaje());
+            } else {
+                System.out.println("NOOOO -> " + msg.getMensaje());
+            }
+        }
+        catch (SQLException e) {
+            System.out.println("Error al cargar las cuadrillas disponibles. " + e.getMessage());
         }
     }
 
